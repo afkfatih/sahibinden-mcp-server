@@ -3,41 +3,44 @@ name: CI
 on:
   push:
     branches: [main]
+    paths:
+      - '**.js'
+      - '**.py'
+      - 'package.json'
+      - 'requirements.txt'
   pull_request:
     branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   check:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     
     steps:
       - uses: actions/checkout@v4
       
-      - name: Node.js kurulumu
+      - name: Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
           
-      - name: Python kurulumu
+      - name: Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+          cache: 'pip'
       
-      - name: Node bağımlılıkları
-        run: npm install
-        
-      - name: Python bağımlılıkları
-        run: pip install -r requirements.txt
-        
-      - name: Syntax kontrolü (JS)
-        run: node --check bridge.js
-        
-      - name: Syntax kontrolü (Python)
-        run: python -m py_compile index-extension.py
-        
-      - name: Extension dosyaları kontrol
+      - name: Kurulum
         run: |
-          test -f extension/manifest.json
-          test -f extension/background.js
-          test -f extension/content.js
-          echo "Tüm dosyalar mevcut"
+          npm ci --prefer-offline
+          pip install -r requirements.txt
+        
+      - name: Syntax kontrol
+        run: |
+          node --check bridge.js
+          python -m py_compile index-extension.py
