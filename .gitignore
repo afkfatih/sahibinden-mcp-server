@@ -4,6 +4,7 @@ __pycache__/
 *.log
 *.json
 !package.json
+!package-lock.json
 !extension/manifest.json
 .DS_Store
 Thumbs.db
