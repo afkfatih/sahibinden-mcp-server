@@ -1,22 +1,12 @@
 ---
-name: Ozellik Istegi
-about: Yeni bir ozellik onermek icin bu sablonu kullanin
-title: '[FEATURE] '
+name: Özellik
+about: Yeni özellik önerisi
+title: ''
 labels: enhancement
-assignees: ''
 ---
 
-## Ozellik Aciklamasi
-Istediginiz ozelligi acik ve net bir sekilde tanimlayin.
+**Ne istiyorsun?**
 
-## Kullanim Senaryosu
-Bu ozellik hangi sorunu cozuyor? Nasil kullanilacak?
 
-## Onerilen Cozum
-Bu ozelligi nasil uygulamayi dusunuyorsunuz?
+**Neden lazım?**
 
-## Alternatifler
-Dusundugunuz alternatif cozumler var mi?
-
-## Ek Bilgiler
-Eklemek istediginiz baska bir sey var mi?
