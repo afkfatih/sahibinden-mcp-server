@@ -2,21 +2,45 @@
 
 const WS_URL = 'ws://localhost:8765';
 let ws = null;
-let reconnectInterval = null;
-let keepAliveInterval = null;
+let reconnectTimeout = null;
 
-// Service Worker'i canli tut
-function startKeepAlive() {
-  if (keepAliveInterval) clearInterval(keepAliveInterval);
-  keepAliveInterval = setInterval(() => {
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ type: 'ping' }));
+// Alarm ile service worker'i canli tut
+chrome.alarms.create('keepAlive', { periodInMinutes: 0.5 });
+
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === 'keepAlive') {
+    // Baglanti kontrolu yap
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+      console.log('[Sahibinden Ext] Alarm: Baglanti yok, yeniden baglaniliyor...');
+      connect();
+    } else {
+      // Ping gonder
+      try {
+        ws.send(JSON.stringify({ type: 'ping' }));
+      } catch (e) {
+        console.log('[Sahibinden Ext] Ping hatasi, yeniden baglaniliyor...');
+        connect();
+      }
     }
-  }, 20000); // 20 saniyede bir ping
-}
+  }
+});
 
 // WebSocket baglantisi kur
 function connect() {
+  // Onceki baglanti varsa kapat
+  if (ws) {
+    try {
+      ws.close();
+    } catch (e) {}
+    ws = null;
+  }
+  
+  // Onceki timeout varsa iptal et
+  if (reconnectTimeout) {
+    clearTimeout(reconnectTimeout);
+    reconnectTimeout = null;
+  }
+  
   console.log('[Sahibinden Ext] WebSocket baglantisi kuruluyor...');
   
   try {
@@ -35,15 +59,6 @@ function connect() {
       type: 'register',
       client: 'chrome-extension'
     }));
-    
-    // Reconnect interval'i temizle
-    if (reconnectInterval) {
-      clearInterval(reconnectInterval);
-      reconnectInterval = null;
-    }
-    
-    // Keep-alive baslat
-    startKeepAlive();
   };
   
   ws.onmessage = async (event) => {
@@ -64,10 +79,6 @@ function connect() {
   ws.onclose = () => {
     console.log('[Sahibinden Ext] WebSocket baglantisi kapandi');
     ws = null;
-    if (keepAliveInterval) {
-      clearInterval(keepAliveInterval);
-      keepAliveInterval = null;
-    }
     scheduleReconnect();
   };
   
@@ -77,12 +88,12 @@ function connect() {
 }
 
 function scheduleReconnect() {
-  // Otomatik yeniden baglan
-  if (!reconnectInterval) {
-    reconnectInterval = setInterval(() => {
+  if (!reconnectTimeout) {
+    reconnectTimeout = setTimeout(() => {
+      reconnectTimeout = null;
       console.log('[Sahibinden Ext] Yeniden baglaniliyor...');
       connect();
-    }, 5000);
+    }, 3000);
   }
 }
 
@@ -257,5 +268,19 @@ async function handleGetListing(data) {
 
 // Extension yuklendiginde baglan
 connect();
+
+// Popup'tan gelen mesajlari dinle
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === 'reconnect') {
+    console.log('[Sahibinden Ext] Manuel yeniden baglanti istegi');
+    connect();
+    sendResponse({ status: 'reconnecting' });
+  } else if (message.action === 'getStatus') {
+    sendResponse({ 
+      connected: ws && ws.readyState === WebSocket.OPEN 
+    });
+  }
+  return true;
+});
 
 console.log('[Sahibinden Ext] Background service worker basladi');

@@ -6,25 +6,44 @@ const resultEl = document.getElementById('result');
 // Bridge baglantisini kontrol et
 async function checkBridge() {
   try {
-    const response = await fetch('http://localhost:8766');
+    const response = await fetch('http://localhost:8766', { 
+      method: 'GET',
+      mode: 'cors'
+    });
     if (response.ok) {
       const data = await response.json();
       if (data.extension_connected) {
         statusEl.className = 'status connected';
         statusEl.textContent = 'Bridge bagli - Extension aktif';
+        return true;
       } else {
         statusEl.className = 'status disconnected';
-        statusEl.textContent = 'Bridge calisiyor ama extension bagli degil';
+        statusEl.textContent = 'Bridge calisiyor - Extension baglanmadi\nAsagidaki "Baglantıyı Yenile" butonuna tikla';
+        return false;
       }
-      return true;
     }
   } catch (e) {
-    // Bridge calismiyor
+    console.error('Bridge kontrol hatasi:', e);
   }
   statusEl.className = 'status disconnected';
   statusEl.textContent = 'Bridge bagli degil!\nnode bridge.js calistir';
   return false;
 }
+
+// Baglantıyı yenile butonu
+document.getElementById('reconnect')?.addEventListener('click', async () => {
+  resultEl.textContent = 'Baglanti yenileniyor...';
+  
+  // Background script'e mesaj gonder
+  try {
+    await chrome.runtime.sendMessage({ action: 'reconnect' });
+    await new Promise(r => setTimeout(r, 2000));
+    await checkBridge();
+    resultEl.textContent = 'Baglanti durumu yukarida gosteriliyor.';
+  } catch (e) {
+    resultEl.textContent = 'Hata: ' + e.message;
+  }
+});
 
 // Bu sayfayi analiz et
 document.getElementById('testCurrent').addEventListener('click', async () => {

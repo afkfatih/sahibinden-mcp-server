@@ -1,14 +1,84 @@
 """
 Sahibinden MCP Server v2.0 - Chrome Extension Bridge
 Gelismis ozellikler: Bolge, Fiyat, Siralama, Soru-Cevap, Detay
+Bridge.js otomatik baslatma destegi
 """
 
 from mcp.server.fastmcp import FastMCP
 import httpx
 import json
+import subprocess
+import os
+import sys
+import time
+import atexit
 
 mcp = FastMCP("Sahibinden Extension Bridge")
 BRIDGE_URL = "http://localhost:8766"
+
+# Bridge process referansi
+bridge_process = None
+
+def start_bridge():
+    """Bridge.js'i arka planda baslat"""
+    global bridge_process
+    
+    # Zaten calisiyor mu kontrol et
+    try:
+        import socket
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        result = sock.connect_ex(('localhost', 8766))
+        sock.close()
+        if result == 0:
+            # Port acik, bridge zaten calisiyor
+            return True
+    except:
+        pass
+    
+    # Bridge.js yolunu bul
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    bridge_path = os.path.join(script_dir, "bridge.js")
+    
+    if not os.path.exists(bridge_path):
+        return False
+    
+    try:
+        # Windows icin CREATE_NO_WINDOW flag
+        startupinfo = None
+        if sys.platform == "win32":
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            startupinfo.wShowWindow = subprocess.SW_HIDE
+        
+        bridge_process = subprocess.Popen(
+            ["node", bridge_path],
+            cwd=script_dir,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            startupinfo=startupinfo
+        )
+        
+        # Bridge'in baslamasini bekle
+        time.sleep(1.5)
+        return bridge_process.poll() is None
+    except Exception as e:
+        return False
+
+def stop_bridge():
+    """MCP kapanirken bridge'i de kapat"""
+    global bridge_process
+    if bridge_process and bridge_process.poll() is None:
+        bridge_process.terminate()
+        try:
+            bridge_process.wait(timeout=3)
+        except:
+            bridge_process.kill()
+
+# MCP kapanirken bridge'i de kapat
+atexit.register(stop_bridge)
+
+# Baslangicta bridge'i baslat
+start_bridge()
 
 # Sehir kodlari
 CITY_CODES = {
@@ -47,7 +117,7 @@ CATEGORIES = {
 }
 
 async def check_bridge():
-    """Bridge baglantisini kontrol et"""
+    """Bridge baglantisini kontrol et, gerekirse baslat"""
     try:
         async with httpx.AsyncClient() as client:
             health = await client.get(BRIDGE_URL, timeout=5.0)
@@ -56,7 +126,19 @@ async def check_bridge():
                 return False, "Chrome Extension bagli degil! Chrome'u ac ve extension'i kontrol et."
             return True, None
     except Exception:
-        return False, f"Bridge Server ({BRIDGE_URL}) calismiyor! 'node bridge.js' calistir."
+        # Bridge calismiyorsa baslatmayi dene
+        if start_bridge():
+            time.sleep(1)
+            try:
+                async with httpx.AsyncClient() as client:
+                    health = await client.get(BRIDGE_URL, timeout=5.0)
+                    status = health.json()
+                    if not status.get("extension_connected"):
+                        return False, "Bridge baslatildi ama Chrome Extension bagli degil! Chrome'u ac."
+                    return True, None
+            except:
+                pass
+        return False, f"Bridge Server ({BRIDGE_URL}) baslatilamadi! Node.js yuklu mu kontrol et."
 
 @mcp.tool()
 async def search_sahibinden(

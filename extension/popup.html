@@ -18,6 +18,7 @@
       padding: 10px;
       border-radius: 5px;
       margin-bottom: 10px;
+      white-space: pre-wrap;
     }
     .status.connected {
       background: #d4edda;
@@ -44,6 +45,10 @@
       background: #6c757d;
       color: white;
     }
+    .btn-warning {
+      background: #ffc107;
+      color: #212529;
+    }
     #result {
       margin-top: 10px;
       padding: 10px;
@@ -68,6 +73,7 @@
     Bridge baglantisi kontrol ediliyor...
   </div>
   
+  <button id="reconnect" class="btn-warning">Baglantiyi Yenile</button>
   <button id="testCurrent" class="btn-primary">Bu Sayfayi Analiz Et</button>
   <button id="testSearch" class="btn-secondary">Ornek Arama Testi</button>
   

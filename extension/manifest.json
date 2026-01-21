@@ -1,16 +1,18 @@
 {
   "manifest_version": 3,
   "name": "Sahibinden Scraper",
-  "version": "1.0",
-  "description": "Sahibinden.com veri çekici - Bridge ile iletişim",
+  "version": "1.1",
+  "description": "Sahibinden.com veri cekici - Bridge ile iletisim",
   "permissions": [
     "activeTab",
     "tabs",
     "scripting",
-    "storage"
+    "storage",
+    "alarms"
   ],
   "host_permissions": [
-    "https://www.sahibinden.com/*"
+    "https://www.sahibinden.com/*",
+    "http://localhost:8766/*"
   ],
   "action": {
     "default_popup": "popup.html"
