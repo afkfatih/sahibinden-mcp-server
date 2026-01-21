@@ -2,9 +2,10 @@
 Sahibinden MCP Server v2.0 - Chrome Extension Bridge
 Gelismis ozellikler: Bolge, Fiyat, Siralama, Soru-Cevap, Detay
 Bridge.js otomatik baslatma destegi
+Resim goruntuleme destegi
 """
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.fastmcp import FastMCP, Image
 import httpx
 import json
 import subprocess
@@ -12,6 +13,8 @@ import os
 import sys
 import time
 import atexit
+import base64
+from io import BytesIO
 
 mcp = FastMCP("Sahibinden Extension Bridge")
 BRIDGE_URL = "http://localhost:8766"
@@ -412,6 +415,103 @@ async def list_city_codes() -> str:
         output.append(f"  - {cat}")
     
     return "\n".join(output)
+
+@mcp.tool()
+async def view_listing_images(listing_id: str, max_images: int = 3) -> list:
+    """
+    Bir ilanin resimlerini indir ve goruntulenebilir formatta dondur.
+    
+    Args:
+        listing_id: Ilan ID numarasi
+        max_images: Maksimum kac resim getirilsin (varsayilan: 3, maks: 5)
+    
+    Returns:
+        Resimlerin base64 kodlanmis hali (AI tarafindan gorulebilir)
+    """
+    ok, error = await check_bridge()
+    if not ok:
+        return [f"HATA: {error}"]
+    
+    try:
+        # Once ilan detayini al
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"{BRIDGE_URL}/listing", 
+                json={"listing_id": listing_id}, 
+                timeout=90.0
+            )
+            data = response.json()
+            
+            if data.get("error"):
+                return [f"HATA: {data['error']}"]
+            
+            images = data.get('images', [])
+            if not images:
+                return ["Bu ilanda resim bulunamadi."]
+            
+            # Resimleri filtrele - sadece gercek resimler
+            valid_images = []
+            for img in images:
+                if img and 'shbdn.com' in img and 'blank' not in img and 'placeholder' not in img:
+                    # Buyuk resim URL'sine cevir
+                    if 'thmb_' in img:
+                        img = img.replace('thmb_', 'x5_')
+                    elif 'lthmb' in img:
+                        img = img.replace('lthmb', 'xxlmdb')
+                    valid_images.append(img)
+            
+            if not valid_images:
+                return ["Gecerli resim bulunamadi."]
+            
+            # Maksimum resim sayisini sinirla
+            max_images = min(max_images, 5)
+            images_to_fetch = valid_images[:max_images]
+            
+            results = []
+            results.append(f"ILAN: {data.get('title', listing_id)}")
+            results.append(f"FIYAT: {data.get('price', 'Belirtilmemis')}")
+            results.append(f"Toplam {len(valid_images)} resim mevcut, {len(images_to_fetch)} tanesi gosteriliyor.\n")
+            
+            # Resimleri indir ve base64'e cevir
+            for i, img_url in enumerate(images_to_fetch, 1):
+                try:
+                    img_response = await client.get(
+                        img_url, 
+                        timeout=30.0,
+                        headers={
+                            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                            "Referer": "https://www.sahibinden.com/"
+                        }
+                    )
+                    
+                    if img_response.status_code == 200:
+                        # Content type belirle
+                        content_type = img_response.headers.get('content-type', 'image/jpeg')
+                        if 'jpeg' in content_type or 'jpg' in content_type:
+                            media_type = 'image/jpeg'
+                        elif 'png' in content_type:
+                            media_type = 'image/png'
+                        elif 'webp' in content_type:
+                            media_type = 'image/webp'
+                        else:
+                            media_type = 'image/jpeg'
+                        
+                        # Base64'e cevir
+                        img_base64 = base64.b64encode(img_response.content).decode('utf-8')
+                        
+                        # Image objesi olustur
+                        results.append(Image(data=img_base64, media_type=media_type))
+                        results.append(f"Resim {i}/{len(images_to_fetch)}")
+                    else:
+                        results.append(f"Resim {i} indirilemedi (HTTP {img_response.status_code})")
+                        
+                except Exception as img_err:
+                    results.append(f"Resim {i} hatasi: {str(img_err)}")
+            
+            return results
+
+    except Exception as e:
+        return [f"Hata: {str(e)}"]
 
 if __name__ == "__main__":
     print("[MCP] Sahibinden Extension MCP Server v2.0 Baslatiliyor...")
