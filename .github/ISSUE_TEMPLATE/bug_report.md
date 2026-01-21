@@ -1,5 +1,5 @@
 ---
-name: Bug
+name: Hata
 about: Hata bildirimi
 title: ''
 labels: bug
@@ -8,18 +8,16 @@ labels: bug
 **Ne oldu?**
 
 
-**Nasıl tekrarlanır?**
+**Adımlar**
 1. 
 2. 
-3. 
 
 **Ortam**
 - OS: 
 - Node: 
 - Python: 
-- Chrome: 
 
-**Log (varsa)**
+**Log**
 ```
 
 ```

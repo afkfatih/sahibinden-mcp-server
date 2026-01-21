@@ -2,13 +2,25 @@ MIT License
 
 Copyright (c) 2026
 
-Bu yazılım EĞİTİM AMAÇLIDIR. MCP (Model Context Protocol) ve Chrome Extension 
-geliştirme öğrenmek isteyenler için örnek proje olarak hazırlanmıştır.
+---
 
-SORUMLULUK REDDİ: Bu yazılımın kullanımından doğabilecek her türlü yasal 
-sorumluluk kullanıcıya aittir. Yazılımın ticari amaçla veya üçüncü taraf 
-hizmetlerinin kullanım koşullarını ihlal edecek şekilde kullanılması 
-önerilmez.
+SORUMLULUK REDDİ (DISCLAIMER)
+
+BU YAZILIM "OLDUĞU GİBİ" SAĞLANMAKTADIR. AÇIK VEYA ZIMNİ HİÇBİR GARANTİ 
+VERİLMEMEKTEDİR. BU YAZILIMIN KULLANIMINDAN DOĞAN HİÇBİR ZARARDAN 
+GELİŞTİRİCİLER SORUMLU TUTULAMAZ.
+
+YAZILIMI KULLANAN KİŞİ:
+- Tüm riski üstlendiğini,
+- Kullanımdan doğabilecek yasal, mali ve cezai sorumluluğu kabul ettiğini,
+- Yazılımı yalnızca eğitim amaçlı kullandığını,
+- Üçüncü taraf haklarını ihlal etmediğini
+beyan ve kabul eder.
+
+Bu yazılım herhangi bir web sitesi veya hizmet ile bağlantılı değildir.
+Ticari kullanım için tasarlanmamıştır.
+
+---
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

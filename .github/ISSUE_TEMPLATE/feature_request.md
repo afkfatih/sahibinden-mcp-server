@@ -1,5 +1,5 @@
 ---
-name: Özellik
+name: Öneri
 about: Yeni özellik önerisi
 title: ''
 labels: enhancement
@@ -8,5 +8,5 @@ labels: enhancement
 **Ne istiyorsun?**
 
 
-**Neden lazım?**
+**Neden gerekli?**
 
