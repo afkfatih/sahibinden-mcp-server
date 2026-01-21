@@ -1,72 +1,52 @@
 # Sahibinden MCP Server
 
-Chrome Extension tabanlı Sahibinden.com scraper. Cursor/AI ile entegre çalışır.
+> **Eğitim Amaçlı Proje** - MCP (Model Context Protocol) ve Chrome Extension geliştirme öğrenmek için hazırlanmıştır.
+
+Chrome Extension + MCP entegrasyonu örneği. Cursor/AI ile nasıl çalıştığını gösterir.
+
+## Disclaimer
+
+Bu proje **yalnızca eğitim ve araştırma amaçlıdır**. 
+
+- Sahibinden.com'un resmi bir ürünü veya iş ortağı değildir
+- Ticari kullanım için tasarlanmamıştır
+- Web scraping yasaları ülkeden ülkeye değişir, kendi sorumluluğunuzdadır
+- Hedef sitenin robots.txt ve kullanım koşullarına uygun davranın
+
+**Kullanımdan doğacak her türlü sorumluluk kullanıcıya aittir.**
+
+## Ne Öğrenirsin?
+
+- MCP server nasıl yazılır (Python)
+- Chrome Extension ile MCP nasıl entegre edilir
+- WebSocket/HTTP bridge mimarisi
+- Content script ile DOM scraping
 
 ## Kurulum
 
 ```bash
-# 1. Bağımlılıklar
 npm install
 pip install -r requirements.txt --user
-
-# 2. Chrome Extension
-# chrome://extensions > Geliştirici modu > Paketlenmemiş yükle > extension/
-
-# 3. MCP Config (~/.cursor/mcp.json)
-{
-  "mcpServers": {
-    "sahibinden": {
-      "command": "python",
-      "args": ["C:/path/to/index-extension.py"]
-    }
-  }
-}
 ```
+
+Chrome: `chrome://extensions` > Geliştirici modu > `extension/` klasörünü yükle
 
 ## Kullanım
 
 ```bash
-# Bridge'i başlat
 npm start
-```
-
-Extension otomatik bağlanır. Terminalde `Chrome Extension kaydedildi` görmelisin.
-
-## MCP Araçları
-
-| Araç | Açıklama |
-|------|----------|
-| `search_sahibinden` | İlan ara (şehir, ilçe, fiyat, tarih filtreleri) |
-| `get_listing_detail` | İlan detayı çek |
-| `get_cheapest_listings` | En ucuz ilanları bul |
-| `list_city_codes` | Desteklenen şehir/ilçe kodları |
-
-### Örnek
-
-```
-"Bayrampaşa'daki en ucuz DJI drone'u bul"
 ```
 
 ## Yapı
 
 ```
 ├── bridge.js           # WebSocket/HTTP köprüsü
-├── index-extension.py  # MCP server
+├── index-extension.py  # MCP server (Python)
 └── extension/          # Chrome Extension
-    ├── background.js   # Köprü iletişimi
-    └── content.js      # Sayfa scraper
-```
-
-## Sorun Giderme
-
-**Extension bağlanmıyor:**
-Extension'ı yenile veya bridge'i yeniden başlat.
-
-**Port meşgul:**
-```powershell
-Get-NetTCPConnection -LocalPort 8765 | % { Stop-Process -Id $_.OwningProcess -Force }
+    ├── background.js   # Service worker
+    └── content.js      # DOM scraper
 ```
 
 ## Lisans
 
-MIT
+MIT - Eğitim amaçlı kullanım için.
