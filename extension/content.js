@@ -121,21 +121,61 @@ function extractDetailInfo() {
   const idMatch = window.location.href.match(/(\d{9,})/);
   if (idMatch) listingNo = idMatch[1];
   
-  // SORU-CEVAP
+  // SORU-CEVAP - Sahibinden.com gercek DOM yapisi
   const questions = [];
-  document.querySelectorAll('.qa-item, .question-answer-item, [class*="qa-"] .qa-question, .classified-qa-item').forEach(item => {
-    const questionEl = item.querySelector('.qa-question, .question-text, [class*="question"]');
-    const answerEl = item.querySelector('.qa-answer, .answer-text, [class*="answer"]');
-    const dateEl = item.querySelector('.qa-date, .date, [class*="date"]');
+  
+  // Ana container: section.classified-question-answer veya #soru
+  const qaContainer = document.querySelector('section.classified-question-answer, #soru, .classified-question-answer');
+  
+  if (qaContainer) {
+    // Her soru-cevap thread'i: .thread-item
+    const threadItems = qaContainer.querySelectorAll('.thread-item');
     
-    if (questionEl) {
-      questions.push({
-        question: questionEl.textContent.trim(),
-        answer: answerEl?.textContent?.trim() || '',
-        date: dateEl?.textContent?.trim() || '',
-      });
-    }
-  });
+    threadItems.forEach(thread => {
+      // Soru kismi: .container-comment-item.type-question
+      const questionBlock = thread.querySelector('.container-comment-item.type-question');
+      // Cevap kismi: .container-comment-item.type-answer (last-answer-item olan)
+      const answerBlock = thread.querySelector('.container-comment-item.type-answer.last-answer-item');
+      
+      if (questionBlock) {
+        // Soran kisi
+        const askerEl = questionBlock.querySelector('.name-surname');
+        // Soru metni
+        const questionTextEl = questionBlock.querySelector('.comment-text');
+        // Soru tarihi
+        const questionDateEl = questionBlock.querySelector('.comment-date');
+        
+        let answerText = '';
+        let answeredBy = '';
+        let answerDate = '';
+        
+        if (answerBlock) {
+          const answerTextEl = answerBlock.querySelector('.comment-text');
+          const answererEl = answerBlock.querySelector('.name-surname');
+          const answerDateEl = answerBlock.querySelector('.comment-date');
+          
+          answerText = answerTextEl?.textContent?.trim() || '';
+          answeredBy = answererEl?.textContent?.trim() || '';
+          answerDate = answerDateEl?.getAttribute('title') || answerDateEl?.textContent?.trim() || '';
+        }
+        
+        const questionText = questionTextEl?.textContent?.trim() || '';
+        
+        if (questionText) {
+          questions.push({
+            asker: askerEl?.textContent?.trim() || '',
+            question: questionText,
+            questionDate: questionDateEl?.getAttribute('title') || questionDateEl?.textContent?.trim() || '',
+            answer: answerText || 'Henuz cevaplanmamis',
+            answeredBy: answeredBy,
+            answerDate: answerDate,
+          });
+        }
+      }
+    });
+  }
+  
+  console.log('[Sahibinden Ext] Bulunan soru-cevap sayisi:', questions.length);
   
   // Fiyat gecmisi (varsa)
   const priceHistory = [];
