@@ -1,0 +1,21 @@
+{
+  "name": "sahibinden-mcp-server",
+  "version": "1.0.0",
+  "description": "Sahibinden.com MCP Server - Chrome Extension ile entegre calisir",
+  "main": "bridge.js",
+  "scripts": {
+    "start": "node bridge.js",
+    "bridge": "node bridge.js"
+  },
+  "keywords": [
+    "sahibinden",
+    "mcp",
+    "scraper",
+    "chrome-extension"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}
