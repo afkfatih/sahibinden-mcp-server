@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Node.js kurulumu
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Python kurulumu
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Node bağımlılıkları
+        run: npm install
+        
+      - name: Python bağımlılıkları
+        run: pip install -r requirements.txt
+        
+      - name: Syntax kontrolü (JS)
+        run: node --check bridge.js
+        
+      - name: Syntax kontrolü (Python)
+        run: python -m py_compile index-extension.py
+        
+      - name: Extension dosyaları kontrol
+        run: |
+          test -f extension/manifest.json
+          test -f extension/background.js
+          test -f extension/content.js
+          echo "Tüm dosyalar mevcut"
